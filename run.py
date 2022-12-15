@@ -15,7 +15,6 @@ def search(message):
 @bot.message_handler(commands=['detail'])
 def detail(message):
     r = requests.post('https://api.v5.zhelper.net/api/detail/',json={'id':str(message.text.split(' ')[-1])})
-    print(r.text)
     j = json.loads(r.text)
     bot.reply_to(message, '\n'.join(['mc_code: {}'.format(j['mc']),'ipfs_id: {}'.format(j['ipfs_cid']),'ipfs_link: https://ipfs.io/ipfs/{}'.format(j['ipfs_cid']),'ipfs_link2: https://dweb.link/ipfs/{}'.format(j['ipfs_cid']),'is_in_libgin: {}'.format(j['in_libgen'])]))
 bot.infinity_polling()
