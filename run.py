@@ -1,12 +1,23 @@
+from dotenv import load_dotenv
 import telebot
 import requests
 import json
 import os
-zhelper_bot_token = os.environ['zhelper_bot_token']
-bot = telebot.TeleBot(zhelper_bot_token) # You can set parse_mode by default. HTML or MARKDOWN
+
+load_dotenv()
+ZHELPER_BOT_TOKEN = os.environ['ZHELPER_BOT_TOKEN']
+TELEGRAM_GATEWAY = os.environ['TELEGRAM_GATEWAY']
+LISTEN = os.environ['LISTEN']
+PORT = os.environ['PORT']
+WEBHOOK_SSL_CERT = os.environ['WEBHOOK_SSL_CERT']
+WEBHOOK_SSL_PRIV = os.environ['WEBHOOK_SSL_PRIV']
+
+bot = telebot.TeleBot(ZHELPER_BOT_TOKEN) # You can set parse_mode by default. HTML or MARKDOWN
+
+
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-	bot.reply_to(message, "Search by send '/search keywords', and get download link by send '/detail id'. Besides, you can use /searchv4 to search by zhelper V4 API.")
+    bot.reply_to(message, "Search by send '/search keywords', and get download link by send '/detail id'. Besides, you can use /searchv4 to search by zhelper V4 API.")
 @bot.message_handler(commands=['search'])
 def search(message):
     r = requests.post('https://api.v5.zhelper.net/api/search/',json={'keyword':message.text.split(' ',1)[1]})
@@ -26,5 +37,9 @@ def search(message):
     j = json.loads(r.text)
     bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],i['filesizeString'],'https://download.zhelper.de/download/{}/{}'.format(i['id'],i['hash']),'\n']]) for order,i in enumerate(j)]))
 
-bot.infinity_polling()
-
+bot.run_webhooks(
+    listen=LISTEN,
+    port=int(PORT),
+    certificate=WEBHOOK_SSL_CERT,
+    certificate_key=WEBHOOK_SSL_PRIV
+)
