@@ -1,3 +1,5 @@
 test.ipynb
 __pycache__
 .env
+webhook_cert.pem
+webhook_pkey.pem
