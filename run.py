@@ -44,7 +44,7 @@ async def search(message):
 @bot.message_handler(commands=['detail'])
 async def detail(message):
     r = await(PostRequest('https://api.v5.zhelper.net/api/detail/',
-        j={'keyword':message.text.split(' ',1)[1]}))
+        j={'id':message.text.split(' ',1)[1]}))
     if r==1:
         await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
     else:
