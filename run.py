@@ -18,7 +18,10 @@ async def PostRequest(url,j):
     async with aiohttp.ClientSession() as session:
         try:
             async with session.post(url,json=j) as response:
-                return await(response.text())
+                r=await(response.text())
+                if response.ok==0:
+                    return 1
+                return r
         except aiohttp.ClientConnectorError as e:
             return 1
 
@@ -34,23 +37,37 @@ async def search(message):
     if r==1:
         await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
     else:
-        print(r)
         j = json.loads(str(r))
-        await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],i['filesizeString'],'/detail',i['zlibrary_id'],]]) for i in j])))
+        try:
+            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],i['filesizeString'],'/detail',i['zlibrary_id'],]]) for i in j])))
+        except:
+            await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
 @bot.message_handler(commands=['detail'])
 async def detail(message):
     r = await(PostRequest('https://api.v5.zhelper.net/api/detail/',
         j={'keyword':message.text.split(' ',1)[1]}))
-    j = json.loads(str(r))
-    file_name =j['title']+'_'+j['author']+'.'+j['extension']
-    await(bot.reply_to(message, '\n'.join(['mc_code: {}'.format(j['mc']),'ipfs_id: {}'.format(j['ipfs_cid']),'ipfs_link: https://ipfs.io/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'ipfs_link2: https://dweb.link/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'is_in_libgin: {}'.format(j['in_libgen'])])))
-
+    if r==1:
+        await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
+    else:
+        j = json.loads(str(r))
+        file_name =j['title']+'_'+j['author']+'.'+j['extension']
+        try:
+            await(bot.reply_to(message, '\n'.join(['mc_code: {}'.format(j['mc']),'ipfs_id: {}'.format(j['ipfs_cid']),'ipfs_link: https://ipfs.io/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'ipfs_link2: https://dweb.link/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'is_in_libgin: {}'.format(j['in_libgen'])])))
+        except:
+            await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
 @bot.message_handler(commands=['searchv4'])
 async def search(message):
     r = await(PostRequest('https://api.v4.zhelper.net/api/search/',
         j={'keyword':message.text.split(' ',1)[1]}))
-    j = json.loads(str(r))
-    await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],i['filesizeString'],'https://download.zhelper.de/download/{}/{}'.format(i['id'],i['hash']),'\n']]) for order,i in enumerate(j)])))
+    print(r)
+    if r==1:
+        await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
+    else:
+        j = json.loads(str(r))
+        try:
+            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],i['filesizeString'],'https://download.zhelper.de/download/{}/{}'.format(i['id'],i['hash']),'\n']]) for order,i in enumerate(j)])))
+        except:
+            await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
     
 
 asyncio.run(bot.run_webhooks(
