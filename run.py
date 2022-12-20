@@ -39,7 +39,7 @@ async def search(message):
     else:
         j = json.loads(str(r))
         try:
-            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],i['filesizeString'],'/detail',i['zlibrary_id'],]]) for i in j])))
+            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],i['filesizeString'],'/detail',i['zlibrary_id'],]]) for i in j['data']])))
         except:
             await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
 @bot.message_handler(commands=['detail'])
