@@ -9,7 +9,7 @@
    openssl req -new -x509 -days 3650 -key webhook_pkey.pem -out webhook_cert.pem
    ```
    
-   其中common name填写webhook域名或ip
+   **其中common name填写webhook域名或ip**
 
 2. `cp .env.example .env`填写环境变量参数
 

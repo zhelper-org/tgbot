@@ -8,7 +8,6 @@ import os
 
 load_dotenv()
 ZHELPER_BOT_TOKEN = os.environ['ZHELPER_BOT_TOKEN']
-TELEGRAM_GATEWAY = os.environ['TELEGRAM_GATEWAY']
 LISTEN = os.environ['LISTEN']
 PORT = os.environ['PORT']
 WEBHOOK_SSL_CERT = os.environ['WEBHOOK_SSL_CERT']
