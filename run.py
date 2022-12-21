@@ -55,17 +55,17 @@ async def detail(message):
             await(bot.reply_to(message, '\n'.join(['mc_code: {}'.format('{}#{}#{}_{}.{}'.format(j['md5'],j['filesize'],j['title'],j['author'],j['extension'])),'ipfs_id: {}'.format(j['ipfs_cid']),'ipfs_link: https://ipfs.io/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'ipfs_link2: https://dweb.link/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'is_in_libgin: {}'.format(j['in_libgen'])])))
         except:
             await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
+            
 @bot.message_handler(commands=['searchv4'])
 async def search(message):
     r = await(PostRequest('https://api.v4.zhelper.net/api/search/',
         j={'keyword':message.text.split(' ',1)[1]}))
-    print(r)
     if r==1:
         await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
     else:
-        j = json.loads(str(r))
+        j = json.loads(str(r))['data']
         try:
-            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],i['filesizeString'],'https://download.zhelper.de/download/{}/{}'.format(i['id'],i['hash']),'\n']]) for order,i in enumerate(j)])))
+            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],pybyte(i['filesize']),'https://test1.zlib.download/download/{}'.format(i['download_link'].replace('/book/','')),'\n']]) for order,i in enumerate(j)])))
         except:
             await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
     
