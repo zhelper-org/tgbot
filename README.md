@@ -1,6 +1,8 @@
 # zhelper TG BOT
 
-使用方式：
+能够对接 zhelper 标准接口的 Telegram bot。
+
+## 使用方式
 
 1. 建立webhook的ssl证书，方式如下：
    

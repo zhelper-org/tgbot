@@ -5,6 +5,7 @@ import asyncio
 import requests
 import json
 import os
+from tools import  *
 
 load_dotenv()
 ZHELPER_BOT_TOKEN = os.environ['ZHELPER_BOT_TOKEN']
@@ -38,7 +39,7 @@ async def search(message):
     else:
         j = json.loads(str(r))
         try:
-            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],i['filesizeString'],'/detail',i['zlibrary_id'],]]) for i in j['data']])))
+            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],pybyte(i['filesize']),'/detail',i['id'],]]) for i in j['data']])))
         except:
             await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
 @bot.message_handler(commands=['detail'])
@@ -51,7 +52,7 @@ async def detail(message):
         j = json.loads(str(r))
         file_name =j['title']+'_'+j['author']+'.'+j['extension']
         try:
-            await(bot.reply_to(message, '\n'.join(['mc_code: {}'.format(j['mc']),'ipfs_id: {}'.format(j['ipfs_cid']),'ipfs_link: https://ipfs.io/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'ipfs_link2: https://dweb.link/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'is_in_libgin: {}'.format(j['in_libgen'])])))
+            await(bot.reply_to(message, '\n'.join(['mc_code: {}'.format('{}#{}#{}_{}.{}'.format(j['md5'],j['filesize'],j['title'],j['author'],j['extension'])),'ipfs_id: {}'.format(j['ipfs_cid']),'ipfs_link: https://ipfs.io/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'ipfs_link2: https://dweb.link/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'is_in_libgin: {}'.format(j['in_libgen'])])))
         except:
             await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
 @bot.message_handler(commands=['searchv4'])
