@@ -39,7 +39,7 @@ async def search(message):
     else:
         j = json.loads(str(r))
         try:
-            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],pybyte(i['filesize']),'/detail',i['id'],]]) for i in j['data']])))
+            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],await(pybyte(i['filesize'])),'/detail',i['id'],]]) for i in j['data']])))
         except:
             await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
 @bot.message_handler(commands=['detail'])
@@ -65,7 +65,7 @@ async def search(message):
     else:
         j = json.loads(str(r))['data']
         try:
-            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],pybyte(i['filesize']),'https://test1.zlib.download/download/{}'.format(i['download_link'].replace('/book/','')),'\n']]) for order,i in enumerate(j)])))
+            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],await(pybyte(i['filesize'])),'https://test1.zlib.download/download/{}'.format(i['download_link'].replace('/book/','')),'\n']]) for order,i in enumerate(j)])))
         except:
             await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
     

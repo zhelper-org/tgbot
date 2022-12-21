@@ -1,4 +1,4 @@
-def pybyte(size, dot=2):
+async def pybyte(size, dot=2):
     size = float(size)
     human_size = ''
     # 位 比特 bit
