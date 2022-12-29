@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from telebot.async_telebot import AsyncTeleBot
+import telebot
 import aiohttp
 import asyncio
 import requests
@@ -80,7 +81,21 @@ async def search(message):
             await(bot.reply_to(message, reply_content))
         except:
             await(bot.reply_to(message, 'Unable to find books. Try using other keywords?'))
-    
+
+async def setcommands():
+    await bot.delete_my_commands(scope=None, language_code=None)
+    await bot.set_my_commands(
+        commands=[
+            telebot.types.BotCommand('search', 'search a book through v5'),
+            telebot.types.BotCommand('searchv4', 'search a book through v4'),
+            telebot.types.BotCommand('detail', 'get download link')
+        ]
+    )
+    cmd = await bot.get_my_commands(scope=None, language_code=None)
+    print([c.to_json() for c in cmd])
+
+asyncio.run(setcommands())
+
 
 asyncio.run(bot.run_webhooks(
     listen=LISTEN,
