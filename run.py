@@ -45,7 +45,8 @@ async def search(message):
                                     await(pybyte(i['filesize'])),'\n  Please Send `/detail',i['id'],'`to get the file']])
                           for i in j['data']])
             await(bot.reply_to(message, reply_content, parse_mode="Markdown"))
-        except:
+        except Exception as e:
+            print(str(e))
             await(bot.reply_to(message, 'Unable to find books. Try using other keywords?'))
 @bot.message_handler(commands=['detail'])
 async def detail(message):
