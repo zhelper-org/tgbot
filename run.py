@@ -41,7 +41,7 @@ async def search(message):
         try:
             await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],await(pybyte(i['filesize'])),'/detail',i['id'],]]) for i in j['data']])))
         except:
-            await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
+            await(bot.reply_to(message, 'Unable to find books. Try using other keywords?'))
 @bot.message_handler(commands=['detail'])
 async def detail(message):
     r = await(PostRequest('https://api.v5.zhelper.net/api/detail/',
@@ -52,7 +52,12 @@ async def detail(message):
         j = json.loads(str(r))
         file_name =j['title']+'_'+j['author']+'.'+j['extension']
         try:
-            await(bot.reply_to(message, '\n'.join(['mc_code: {}'.format('{}#{}#{}_{}.{}'.format(j['md5'],j['filesize'],j['title'],j['author'],j['extension'])),'ipfs_id: {}'.format(j['ipfs_cid']),'ipfs_link: https://ipfs.io/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'ipfs_link2: https://dweb.link/ipfs/{}?filename={}'.format(j['ipfs_cid'],file_name),'is_in_libgin: {}'.format(j['in_libgen'])])))
+            reply_content='\n'.join(['*RapidUpload_Code(BaiduNetDisk)*: `{}`'.format('{}#{}#{}_{}.{}'.format(j['md5'],j['filesize'],j['title'],j['author'],j['extension'])),
+                                     '*IPFS_ID:* `{}`'.format(j['ipfs_cid']),
+                                     '*IPFS_PUBLIC_GATEWAY0:* [LINK0(IPFS.IO)](https://ipfs.io/ipfs/{}?filename={})'.format(j['ipfs_cid'],file_name),
+                                     '*IPFS_PUBLIC_GATEWAY1:* [LINK1(DWEB.LINK)](https://dweb.link/ipfs/{}?filename={})'.format(j['ipfs_cid'],file_name),
+                                     '*WHETHER_FILE_IN_LIBGEN:* {}'.format(j['in_libgen'])])
+            await(bot.reply_to(message, reply_content, parse_mode="Markdown"))
         except:
             await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
             
@@ -65,9 +70,10 @@ async def search(message):
     else:
         j = json.loads(str(r))['data']
         try:
-            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],await(pybyte(i['filesize'])),'https://test1.zlib.download/download/{}'.format(i['download_link'].replace('/book/','')),'\n']]) for order,i in enumerate(j)])))
+            reply_content='\n'.join([' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],await(pybyte(i['filesize'])),'https://test1.zlib.download/download/{}'.format(i['download_link'].replace('/book/','')),'\n']]) for order,i in enumerate(j)])
+            await(bot.reply_to(message, reply_content))
         except:
-            await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
+            await(bot.reply_to(message, 'Unable to find books. Try using other keywords?'))
     
 
 asyncio.run(bot.run_webhooks(
