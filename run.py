@@ -39,7 +39,11 @@ async def search(message):
     else:
         j = json.loads(str(r))
         try:
-            await(bot.reply_to(message, '\n'.join([' '.join([str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],await(pybyte(i['filesize'])),'/detail',i['id'],]]) for i in j['data']])))
+            reply_content='\n'.join([' '.join([
+                                    str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],
+                                    await(pybyte(i['filesize'])),'\n  Please Send `/detail',i['id'],'`to get the file']])
+                          for i in j['data']])
+            await(bot.reply_to(message, reply_content, parse_mode="Markdown"))
         except:
             await(bot.reply_to(message, 'Unable to find books. Try using other keywords?'))
 @bot.message_handler(commands=['detail'])
