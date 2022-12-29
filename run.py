@@ -5,7 +5,7 @@ import asyncio
 import requests
 import json
 import os
-from tools import  *
+from tools import *
 
 load_dotenv()
 ZHELPER_BOT_TOKEN = os.environ['ZHELPER_BOT_TOKEN']
@@ -74,7 +74,9 @@ async def search(message):
     else:
         j = json.loads(str(r))['data']
         try:
-            reply_content='\n'.join([' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],await(pybyte(i['filesize'])),'https://test1.zlib.download/download/{}'.format(i['download_link'].replace('/book/','')),'\n']]) for order,i in enumerate(j)])
+            reply_content='\n'.join(
+                          [' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],await(pybyte(i['filesize'])),
+                          'https://zlib.download/download/{}'.format(i['id'].replace('/book/','')),'\n']]) for order,i in enumerate(j)])
             await(bot.reply_to(message, reply_content))
         except:
             await(bot.reply_to(message, 'Unable to find books. Try using other keywords?'))
