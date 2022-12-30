@@ -14,3 +14,9 @@ async def pybyte(size, dot=2):
     elif pow(1024, 2) <= size < pow(1024, 3):
         human_size = str(round(size / pow(1024, 2), dot)) + 'MB'
     return human_size
+
+# def add_escape(value):
+#     reserved_chars = r'''?&|!{}[]()^~*:\\"'+- '''
+#     replace = ['\\' + l for l in reserved_chars]
+#     trans = str.maketrans(dict(zip(reserved_chars, replace)))
+#     return value.translate(trans)
