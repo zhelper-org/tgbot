@@ -30,11 +30,15 @@ bot = AsyncTeleBot(ZHELPER_BOT_TOKEN)
 
 @bot.message_handler(commands=['start', 'help'])
 async def send_welcome(message):
-    await(bot.reply_to(message, "Search by send '/search keywords', and get download link by send '/detail id'. Besides, you can use /searchv4 to search by zhelper V4 API."))
+    await(bot.reply_to(message, "Search by send '/search keywords', and get download link by send '/detail id'. Besides, you can use /searchv4 to search by V4 API. 发送 '/search keywords' 以搜索，之后发送 '/detail id' 获取下载链接。此外，可以使用 /searchv4 借助 V4 接口下载。"))
 @bot.message_handler(commands=['search'])
 async def search(message):
+    keywords = message.text.split(' ',1)
+    if len(keywords) ==1:
+        await(bot.reply_to(message, 'Please provide keywords 请提供关键词'))
+        return 0
     r = await(PostRequest('https://api.v5.zhelper.net/api/search/',
-        j={'keyword':message.text.split(' ',1)[1]}))
+        j={'keyword':keywords[1]}))
     if r==1:
         await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
     else:
@@ -51,8 +55,12 @@ async def search(message):
 
 @bot.message_handler(commands=['detail'])
 async def detail(message):
+    id = message.text.split(' ',1)
+    if len(id) ==1:
+        await(bot.reply_to(message, 'Please provide id 请提供ID'))
+        return 0
     r = await(PostRequest('https://api.v5.zhelper.net/api/detail/',
-        j={'id':message.text.split(' ',1)[1]}))
+        j={'id':id[1]}))
     if r==1:
         await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
     else:
@@ -82,8 +90,12 @@ async def detail(message):
             
 @bot.message_handler(commands=['searchv4'])
 async def search(message):
+    keywords = message.text.split(' ',1)
+    if len(keywords) ==1:
+        await(bot.reply_to(message, 'Please provide keywords 请提供关键词'))
+        return 0
     r = await(PostRequest('https://api.mibooks.tk/api/search/',
-        j={'keyword':message.text.split(' ',1)[1]}))
+        j={'keyword':keywords[1]}))
     if r==1:
         await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
     else:
