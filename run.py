@@ -1,12 +1,10 @@
 from dotenv import load_dotenv
-from telebot.async_telebot import AsyncTeleBot
-import telebot
-import aiohttp
-import asyncio
-import requests
-import json
 import os
-from tools import *
+from telebot.async_telebot import AsyncTeleBot
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+import telebot
+import asyncio
+from search import *
 
 load_dotenv()
 ZHELPER_BOT_TOKEN = os.environ['ZHELPER_BOT_TOKEN']
@@ -15,114 +13,93 @@ PORT = os.environ['PORT']
 WEBHOOK_SSL_CERT = os.environ['WEBHOOK_SSL_CERT']
 WEBHOOK_SSL_PRIV = os.environ['WEBHOOK_SSL_PRIV']
 
-async def PostRequest(url,j):
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.post(url,json=j) as response:
-                r=await(response.text())
-                if response.ok==0:
-                    return 1
-                return r
-        except aiohttp.ClientConnectorError as e:
-            return 1
-
 bot = AsyncTeleBot(ZHELPER_BOT_TOKEN)
 
-@bot.message_handler(commands=['start', 'help'])
+async def extract_unique_code(text):
+    return text.split()[1] if len(text.split()) > 1 else None
+
+@bot.message_handler(commands=['start'])
 async def send_welcome(message):
-    await(bot.reply_to(message, "Search by send '/search keywords', and get download link by send '/detail id'. Besides, you can use /searchv4 to search by V4 API. 发送 '/search keywords' 以搜索，之后发送 '/detail id' 获取下载链接。此外，可以使用 /searchv4 借助 V4 接口下载。"))
-@bot.message_handler(commands=['search'])
-async def search(message):
-    keywords = message.text.split(' ',1)
-    if len(keywords) ==1:
-        await(bot.reply_to(message, 'Please provide keywords 请提供关键词'))
-        return 0
-    r = await(PostRequest('https://api.v5.zhelper.net/api/search/',
-        j={'keyword':keywords[1]}))
-    if r==1:
-        await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
+    unique_code = await extract_unique_code(message.text)
+    if unique_code: 
+        r = await(PostRequest('https://api.v5.zhelper.net/api/detail/',
+            j={'id':unique_code}))
+        if r==1:
+            await(bot.reply_to(message, 'Connection Error, please contact bot admin. \n\n连接出错，请联系管理员'))
+        else:
+            j = json.loads(str(r))
+            file_name =j['title']+'_'+j['author']+'.'+j['extension']
+            try:
+                reply_content='\n'.join(['*RapidUpload_Code(BaiduNetDisk)*: `{}`'.format('{}#{}#{}_{}.{}'.format(j['md5'],j['filesize'],j['title'],j['author'],j['extension'])),
+                                         '*IPFS_ID:* `{}`'.format(j['ipfs_cid']),
+                                         '*IPFS_PUBLIC_GATEWAY0:* [LINK0(IPFS.IO)](https://ipfs.io/ipfs/{}?filename={})'.format(j['ipfs_cid'],file_name),
+                                         '*IPFS_PUBLIC_GATEWAY1:* [LINK1(DWEB.LINK)](https://dweb.link/ipfs/{}?filename={})'.format(j['ipfs_cid'],file_name),
+                                         '*WHETHER_FILE_IN_LIBGEN:* {}'.format(j['in_libgen'])])
+                await(bot.reply_to(message, reply_content, parse_mode="Markdown"))
+            except:
+                await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
     else:
-        j = json.loads(str(r))
+        reply = """Welcome to Zhelper bot! Please type your book name and we will find the book for you.
+zhelper international group: https://t.me/zhelperorg
+欢迎使用zhelper机器人！请直接输入书名进行搜索。zhelper官方中文群https://t.me/zhelpert"""
+    await bot.reply_to(message, reply)
+
+@bot.message_handler(commands=['help'])
+async def send_welcome(message):
+    await(bot.reply_to(message, """Welcome to Zhelper bot! Please type your book name and we will find the book for you.
+zhelper international group: https://t.me/zhelperorg
+欢迎使用zhelper机器人！请直接输入书名进行搜索。zhelper官方中文群https://t.me/zhelpert"""))
+
+async def gen_markup(t):
+    markup = InlineKeyboardMarkup()
+    markup.row_width = 2
+    markup.add(InlineKeyboardButton("(local database) 离线数据库", callback_data="v5."+t+".1"))
+    markup.add(InlineKeyboardButton("(online database)在线数据库", callback_data="v4."+t+".1"))
+    return markup
+async def gen_page_markup(method,t,page):
+    markup = InlineKeyboardMarkup()
+    if page!="1": 
+        markup.add(InlineKeyboardButton("<-", callback_data="v5."+t+"."+str(int(page)-1)),
+                   InlineKeyboardButton(page,callback_data="ignore"),
+                   InlineKeyboardButton("->", callback_data=method+t+"."+str(int(page)+1)))
+    else:
+        markup.add(InlineKeyboardButton("<-", callback_data="ignore"),
+                   InlineKeyboardButton(page,callback_data="ignore"),
+                   InlineKeyboardButton("->", callback_data=method+t+"."+str(int(page)+1)))
+    return markup
+
+@bot.callback_query_handler(func=lambda call: True)
+async def callback_query(call):
+    data=call.data
+    if data=="ignore":
+        return
+    command=data.split('.')[0]
+    content=data.split('.')[1]
+    page=data.split('.')[2]
+    if command == "v4":
+        reply_content=await v4(content,page)
         try:
-            reply_content='\n'.join([' '.join([
-                                    str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],
-                                    await(pybyte(i['filesize'])),'\n  Please Send `/detail',i['id'],'`to get the file']])
-                          for i in j['data']])
-            await(bot.reply_to(message, reply_content, parse_mode="Markdown"))
+            await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                          text=reply_content, reply_markup=await gen_page_markup('v4.',content,page),parse_mode='Markdown')
         except Exception as e:
             print(str(e))
-            await(bot.reply_to(message, 'Unable to find books. Try using other keywords?'))
-
-@bot.message_handler(commands=['detail'])
-async def detail(message):
-    id = message.text.split(' ',1)
-    if len(id) ==1:
-        await(bot.reply_to(message, 'Please provide id 请提供ID'))
-        return 0
-    r = await(PostRequest('https://api.v5.zhelper.net/api/detail/',
-        j={'id':id[1]}))
-    if r==1:
-        await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
-    else:
-        j = json.loads(str(r))
-        file_name =j['title']+'_'+j['author']+'.'+j['extension']
+            await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                          text='Unable to find books. Try using other keywords?\n我们无法找到这本书，请尝试更换关键词')
+    elif command == "v5":
+        reply_content=await v5(content,page)
         try:
-            reply_content = []
-            # 转义问题无法解决，会出现 奇怪的效果，见 /detail 3556456，这里先用 行内代码顶一下
-            if j.get('md5') and j.get('filesize'):
-                rapid_code = '{}#{}#{}_{}.{}'.format(j['md5'],j['filesize'],j['title'],j['author'],j['extension'])
-                reply_content.append('*RapidUpload_Code(BaiduNetDisk)*: `https://rapidupload.1kbtool.com/{}`'.format(rapid_code))
-            if j.get('ipfs_cid'):
-                reply_content.append('*IPFS:*  `https://ipfs-checker.1kbtool.com/{}?filename={}`'.format(j['ipfs_cid'],file_name))
-            if j.get('in_libgen') and j.get('md5'):
-                reply_content.append('*Libgen* `https://libgendown.1kbtool.com/{}`'.format(j['md5']))
-            # if j.get('md5') and j.get('filesize'):
-            #     rapid_code = '{}#{}#{}_{}.{}'.format(j['md5'],j['filesize'],j['title'],j['author'],j['extension'])
-            #     reply_content.append('*RapidUpload_Code(BaiduNetDisk)*: [RapidUpload GUI](https://rapidupload.1kbtool.com/{})'.format(rapid_code))
-            # if j.get('ipfs_cid'):
-            #     reply_content.append('*IPFS:* [GATEWAY-Checker](https://ipfs-checker.1kbtool.com/{}?filename={})'.format(j['ipfs_cid'],file_name))
-            # if j.get('in_libgen') and j.get('md5'):
-            #     reply_content.append('*Libgen*: [Libgen Tool](https://libgendown.1kbtool.com/{})'.format(j['md5']))
-            reply_content='\n'.join(reply_content)
-            await(bot.reply_to(message, reply_content, parse_mode="Markdown"))
-        except:
-            await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
-            
-@bot.message_handler(commands=['searchv4'])
-async def search(message):
-    keywords = message.text.split(' ',1)
-    if len(keywords) ==1:
-        await(bot.reply_to(message, 'Please provide keywords 请提供关键词'))
-        return 0
-    r = await(PostRequest('https://api.mibooks.tk/api/search/',
-        j={'keyword':keywords[1]}))
-    if r==1:
-        await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
-    else:
-        j = json.loads(str(r))['data']
-        try:
-            reply_content='\n'.join(
-                          [' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],await(pybyte(i['filesize'])),
-                          'https://zlib.download/download/{}'.format(i['id'].replace('/book/','')),'\n']]) for order,i in enumerate(j)])
-            await(bot.reply_to(message, reply_content))
-        except:
-            await(bot.reply_to(message, 'Unable to find books. Try using other keywords?'))
-
-async def setcommands():
-    await bot.delete_my_commands(scope=None, language_code=None)
-    await bot.set_my_commands(
-        commands=[
-            telebot.types.BotCommand('search', 'search a book through v5'),
-            telebot.types.BotCommand('searchv4', 'search a book through mibooks (zhelper V4)'),
-            telebot.types.BotCommand('detail', 'get download link')
-        ]
-    )
-    cmd = await bot.get_my_commands(scope=None, language_code=None)
-    print([c.to_json() for c in cmd])
-
-asyncio.run(setcommands())
+            await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                          text=reply_content, reply_markup=await gen_page_markup('v5.',content,page),parse_mode='Markdown')
+        except Exception as e:
+            print(str(e))
+            await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                          text='Unable to find books. Try using other keywords?\n我们无法找到这本书，请尝试更换关键词')
+@bot.message_handler(func=lambda message: True)
+async def allmessage(message):
+    await bot.reply_to(message, "Please choose the database\n请选择数据库", reply_markup=await gen_markup(message.text))
 
 
+# asyncio.run(setcommands())
 asyncio.run(bot.run_webhooks(
     listen=LISTEN,
     port=int(PORT),
