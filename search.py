@@ -21,7 +21,7 @@ async def v5(content,page):
         
 
 async def v4(content,page):
-    r = await(PostRequest('https://api.mibooks.tk/api/search/',
+    r = await(PostRequest('https://api.zlib.app/api/search/',
         j={'keyword': content,'page': int(page)}))
     if r==1:
         return 'Connection Error, please contact bot admin'
@@ -29,7 +29,7 @@ async def v4(content,page):
         j = json.loads(str(r))['data']
         reply_content='\n'.join(
                       [' '.join([str(x) for x in [order,i['title'],i['author'],i['publisher'],i['extension'],await(pybyte(i['filesize'])),
-                      'https://zlib.download/download/{}'.format(i['id'].replace('/book/','')),'\n']]) for order,i in enumerate(j)])
+                      'https://d.zlib.app/download/{}'.format(i['id'].replace('/book/','')),'\n']]) for order,i in enumerate(j)])
         return reply_content
 
 async def detail(id):
