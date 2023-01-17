@@ -2,6 +2,7 @@ from tools import *
 from req import PostRequest
 import json,os
 from dotenv import load_dotenv
+from telebot.formatting import escape_markdown
 
 load_dotenv()
 BOT_USERNAME = os.environ['BOT_USERNAME']
@@ -13,10 +14,11 @@ async def v5(content,page):
         return 'Connection Error, please contact bot admin'
     else:
         j = json.loads(str(r))
-        reply_content='\n'.join([' '.join([
-                                str(x) for x in [i['title'],i['author'],i['publisher'],i['extension'],
-                                await(pybyte(i['filesize'])),'\n  [Click here and start 点击这里并点击下方对话框start下载](https://t.me/'+BOT_USERNAME+'?start=',i['id'],')']])
-                      for i in j['data']])
+        reply_content=""
+        for i in j['data']:
+            reply_content=reply_content+escape_markdown(' '.join([str(i['title']),str(i['author']),str(i['publisher']),str(i['extension'])]))
+            reply_content=reply_content+escape_markdown(str(await pybyte(i['filesize'])))
+            reply_content=reply_content+'\n[Click here and start 点击这里并点击下方对话框start下载](https://t.me/'+BOT_USERNAME+'?start='+str(i['id'])+')\n'
         return reply_content
         
 
@@ -39,17 +41,17 @@ async def detail(id):
         return 'Connection Error, please contact bot admin'
     else:
         j = json.loads(str(r))
-        file_name =j['title']+'_'+j['author']+'.'+j['extension']
+        file_name =escape_markdown(j['title']+'_'+j['author']+'.'+j['extension'])
         try:
             reply_content = []
             # 转义问题无法解决，会出现 奇怪的效果，见 /detail 3556456，这里先用 行内代码顶一下
             if j.get('md5') and j.get('filesize'):
-                rapid_code = '{}#{}#{}_{}.{}'.format(j['md5'],j['filesize'],j['title'],j['author'],j['extension'])
-                reply_content.append('*RapidUpload_Code(BaiduNetDisk)*: `https://rapidupload.1kbtool.com/{}`'.format(rapid_code))
+                rapid_code = '{}#{}#{}.{}'.format(j['md5'],j['filesize'],j['title'],j['extension'])
+                reply_content.append('*RapidUpload_Code(BaiduNetDisk)*: [点击此处跳转到秒传网页](https://rapidupload.1kbtool.com/{})'.format(rapid_code))
             if j.get('ipfs_cid'):
-                reply_content.append('*IPFS:*  `https://ipfs-checker.1kbtool.com/{}?filename={}`'.format(j['ipfs_cid'],file_name))
+                reply_content.append('*IPFS:*  [IPFS LINK | 点击此处跳转到IPFS](https://ipfs-checker.1kbtool.com/{}?filename={})'.format(j['ipfs_cid'],file_name))
             if j.get('in_libgen') and j.get('md5'):
-                reply_content.append('*Libgen* `https://libgendown.1kbtool.com/{}`'.format(j['md5']))
+                reply_content.append('*Libgen* [Libgeb LINK | 点击此处跳转到libgen](https://libgendown.1kbtool.com/{})'.format(j['md5']))
             # if j.get('md5') and j.get('filesize'):
             #     rapid_code = '{}#{}#{}_{}.{}'.format(j['md5'],j['filesize'],j['title'],j['author'],j['extension'])
             #     reply_content.append('*RapidUpload_Code(BaiduNetDisk)*: [RapidUpload GUI](https://rapidupload.1kbtool.com/{})'.format(rapid_code))
@@ -58,6 +60,6 @@ async def detail(id):
             # if j.get('in_libgen') and j.get('md5'):
             #     reply_content.append('*Libgen*: [Libgen Tool](https://libgendown.1kbtool.com/{})'.format(j['md5']))
             reply_content='\n'.join(reply_content)
-            await(bot.reply_to(message, reply_content, parse_mode="Markdown"))
+            return reply_content
         except:
-            await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
+            return 'Connection Error, please contact bot admin'

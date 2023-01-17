@@ -22,22 +22,11 @@ async def extract_unique_code(text):
 async def send_welcome(message):
     unique_code = await extract_unique_code(message.text)
     if unique_code: 
-        r = await(PostRequest('https://api.v5.zhelper.net/api/detail/',
-            j={'id':unique_code}))
-        if r==1:
-            await(bot.reply_to(message, 'Connection Error, please contact bot admin. \n\n连接出错，请联系管理员'))
-        else:
-            j = json.loads(str(r))
-            file_name =j['title']+'_'+j['author']+'.'+j['extension']
-            try:
-                reply_content='\n'.join(['*RapidUpload_Code(BaiduNetDisk)*: `{}`'.format('{}#{}#{}_{}.{}'.format(j['md5'],j['filesize'],j['title'],j['author'],j['extension'])),
-                                         '*IPFS_ID:* `{}`'.format(j['ipfs_cid']),
-                                         '*IPFS_PUBLIC_GATEWAY0:* [LINK0(IPFS.IO)](https://ipfs.io/ipfs/{}?filename={})'.format(j['ipfs_cid'],file_name),
-                                         '*IPFS_PUBLIC_GATEWAY1:* [LINK1(DWEB.LINK)](https://dweb.link/ipfs/{}?filename={})'.format(j['ipfs_cid'],file_name),
-                                         '*WHETHER_FILE_IN_LIBGEN:* {}'.format(j['in_libgen'])])
-                await(bot.reply_to(message, reply_content, parse_mode="Markdown"))
-            except:
-                await(bot.reply_to(message, 'Connection Error, please contact bot admin'))
+        reply_content=await detail(unique_code)
+        try:
+            await(bot.reply_to(message, reply_content, parse_mode="Markdown"))
+        except:
+            await(bot.reply_to(message, 'Connection Error, please contact bot admin\n连接错误，请联系机器人管理员'))
     else:
         reply = """Welcome to Zhelper bot! Please type your book name and we will find the book for you.
 zhelper international group: https://t.me/zhelperorg
@@ -89,7 +78,7 @@ async def callback_query(call):
         reply_content=await v5(content,page)
         try:
             await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                          text=reply_content, reply_markup=await gen_page_markup('v5.',content,page),parse_mode='Markdown')
+                          text=reply_content, reply_markup=await gen_page_markup('v5.',content,page),parse_mode='Markdownv2')
         except Exception as e:
             print(str(e))
             await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
